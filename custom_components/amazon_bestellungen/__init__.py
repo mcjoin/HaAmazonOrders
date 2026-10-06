@@ -12,7 +12,7 @@ from .api import AmazonClient
 from .const import CONF_DOMAIN, CONF_OTP_SECRET
 from .coordinator import AmazonConfigEntry, AmazonOrdersCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.TODO]
 
 
 def create_client(hass: HomeAssistant, data: dict) -> AmazonClient:

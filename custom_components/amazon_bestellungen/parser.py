@@ -39,6 +39,7 @@ WEEKDAYS = {
 
 DELIVERED_WORDS = ("zugestellt", "delivered", "livré", "consegnato", "entregado", "bezorgd")
 CANCELLED_WORDS = ("storniert", "cancelled", "canceled", "annulé", "annullato", "cancelado", "geannuleerd")
+RETURNED_WORDS = ("rücksendung", "erstattet", "returned", "refunded", "retour", "rimborsato", "reembolsado")
 TODAY_WORDS = ("heute", "today", "aujourd'hui", "oggi", "hoy", "vandaag")
 YESTERDAY_WORDS = ("gestern", "yesterday", "ieri", "ayer", "gisteren")
 
@@ -55,6 +56,7 @@ class Shipment:
     status: str
     delivered: bool
     delivered_on: date | None = None
+    expected_on: date | None = None
 
 
 @dataclass
@@ -84,6 +86,27 @@ class Order:
         return any(w in self.status.lower() for w in CANCELLED_WORDS)
 
     @property
+    def returned(self) -> bool:
+        """True when the order was returned / refunded."""
+        return any(w in self.status.lower() for w in RETURNED_WORDS)
+
+    @property
+    def digital(self) -> bool:
+        """True for digital orders (videos, e-books, apps) that are never shipped."""
+        return self.order_id.startswith("D")
+
+    @property
+    def finished(self) -> bool:
+        """True for orders that will never be delivered (cancelled, returned, digital)."""
+        return self.cancelled or self.returned or self.digital
+
+    @property
+    def expected_on(self) -> date | None:
+        """Latest announced delivery date of the shipments still on their way."""
+        dates = [s.expected_on for s in self.shipments if not s.delivered and s.expected_on]
+        return max(dates) if dates else None
+
+    @property
     def delivered_on(self) -> date | None:
         """Date of the last delivery, if known for every shipment."""
         dates = [s.delivered_on for s in self.shipments]
@@ -98,6 +121,7 @@ class Order:
         data["order_date"] = self.order_date.isoformat() if self.order_date else None
         data["status"] = self.status
         data["delivered"] = self.delivered
+        data["expected_on"] = self.expected_on.isoformat() if self.expected_on else None
         return data
 
 
@@ -105,20 +129,27 @@ def _clean(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
-def _infer_year(day: int, month: int, today: date) -> date | None:
+def _infer_year(day: int, month: int, today: date, future: bool) -> date | None:
     try:
         candidate = date(today.year, month, day)
     except ValueError:
         return None
-    # Status texts without a year refer to the past (or the near future for
-    # announced deliveries); a date far in the future belongs to last year.
-    if candidate > today + timedelta(days=60):
+    if future:
+        # Announced deliveries lie ahead; a date long past belongs to next year.
+        if candidate < today - timedelta(days=30):
+            candidate = candidate.replace(year=today.year + 1)
+    # Past events (delivery, order placed): a date far ahead belongs to last year.
+    elif candidate > today + timedelta(days=60):
         candidate = candidate.replace(year=today.year - 1)
     return candidate
 
 
-def parse_date(text: str, today: date | None = None) -> date | None:
-    """Parse a localized date from a free text like 'Zugestellt am 3. Oktober'."""
+def parse_date(text: str, today: date | None = None, future: bool = False) -> date | None:
+    """Parse a localized date from a free text like 'Zugestellt am 3. Oktober'.
+
+    With future=True, partial dates (weekday, day without year) are resolved
+    forwards, as needed for announced deliveries like 'Zustellung: Freitag'.
+    """
     today = today or date.today()
     lower = text.lower()
 
@@ -145,13 +176,13 @@ def parse_date(text: str, today: date | None = None) -> date | None:
                     return date(int(m.group(3)), month, day)
                 except ValueError:
                     return None
-            return _infer_year(day, month, today)
+            return _infer_year(day, month, today, future)
 
     for name, weekday in WEEKDAYS.items():
         if re.search(rf"\b{name}\b", lower):
-            # A delivered status naming only a weekday refers to the past week.
-            delta = (today.weekday() - weekday) % 7
-            return today - timedelta(days=delta)
+            if future:
+                return today + timedelta(days=(weekday - today.weekday()) % 7)
+            return today - timedelta(days=(today.weekday() - weekday) % 7)
 
     return None
 
@@ -160,10 +191,12 @@ def _parse_shipment(text: str, today: date) -> Shipment:
     text = _clean(text)
     lower = text.lower()
     delivered = any(w in lower for w in DELIVERED_WORDS) and "nicht" not in lower and "not " not in lower
+    pending = not delivered and not any(w in lower for w in CANCELLED_WORDS + RETURNED_WORDS)
     return Shipment(
         status=text,
         delivered=delivered,
         delivered_on=parse_date(text, today) if delivered else None,
+        expected_on=parse_date(text, today, future=True) if pending else None,
     )
 
 

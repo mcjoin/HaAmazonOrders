@@ -43,17 +43,34 @@ Wenn die Anmeldung abläuft und ein Code nötig ist, meldet Home Assistant eine
 |---|---|---|
 | `sensor.amazon_…_bestellungen` | Anzahl angezeigter Bestellungen | alle Bestellungen (offen + kürzlich zugestellt) |
 | `sensor.amazon_…_unterwegs` | Anzahl noch nicht zugestellter Bestellungen | nur offene Bestellungen |
+| `todo.amazon_…_bestellungen` | Anzahl offener Bestellungen | – (Bestellungen als Listeneinträge) |
+
+`…` steht für deine E-Mail-Adresse, z. B. `sensor.amazon_max_example_com_bestellungen`.
+Die genaue ID findest du unter **Einstellungen → Geräte & Dienste → Amazon Bestellungen**.
 
 Jede Bestellung enthält: `order_id`, `order_date`, `total`, `url`, `items`,
-`status`, `delivered`, `delivered_on`, `remove_after`.
+`status`, `delivered`, `delivered_on`, `expected_on`, `remove_after`.
+
+Stornierte, zurückgesendete und digitale Bestellungen (Filme, E-Books, Apps)
+werden nicht angezeigt.
+
+### To-do-Liste
+
+Die Bestellungen erscheinen in der Seitenleiste unter **To-do-Listen**: offene
+Bestellungen mit erwartetem Liefertermin als Fälligkeitsdatum, zugestellte
+abgehakt. Fürs Dashboard einfach eine **To-do-Listen-Karte** mit
+`todo.amazon_…_bestellungen` hinzufügen. Die Liste ist schreibgeschützt.
 
 ### Beispiel-Karte (Markdown)
+
+Entitäts-ID in der ersten Zeile an deine anpassen:
 
 ```yaml
 type: markdown
 title: Amazon Bestellungen
 content: >
-  {% for o in state_attr('sensor.amazon_bestellungen', 'orders') or [] %}
+  {% set sensor = 'sensor.amazon_max_example_com_bestellungen' %}
+  {% for o in state_attr(sensor, 'orders') or [] %}
   **{{ o.items | join(', ') | truncate(80) }}**  
   {{ o.status }} · [{{ o.order_id }}]({{ o.url }})
 

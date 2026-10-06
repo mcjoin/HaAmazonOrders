@@ -116,6 +116,9 @@ class AmazonOrdersCoordinator(DataUpdateCoordinator[OrdersData]):
 
         for order in orders:
             seen_ids.add(order.order_id)
+            if order.finished:
+                # Cancelled, returned and digital orders are never delivered.
+                continue
             data = order.as_dict()
             delivered_on: date | None = None
             if order.delivered:

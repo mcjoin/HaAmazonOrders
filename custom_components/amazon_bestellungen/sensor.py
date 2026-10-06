@@ -27,6 +27,19 @@ async def async_setup_entry(
     )
 
 
+def device_info(coordinator: AmazonOrdersCoordinator) -> DeviceInfo:
+    """Device shared by all entities of an Amazon account."""
+    entry = coordinator.config_entry
+    return DeviceInfo(
+        identifiers={(DOMAIN, entry.entry_id)},
+        name=f"Amazon ({entry.data[CONF_EMAIL]})",
+        manufacturer="Amazon",
+        model=entry.data[CONF_DOMAIN],
+        entry_type=DeviceEntryType.SERVICE,
+        configuration_url=coordinator.client.base_url + "/your-orders/orders",
+    )
+
+
 class OrdersSensor(CoordinatorEntity[AmazonOrdersCoordinator], SensorEntity):
     """Number of listed orders, with the order list as attribute."""
 
@@ -40,14 +53,7 @@ class OrdersSensor(CoordinatorEntity[AmazonOrdersCoordinator], SensorEntity):
         self._attr_translation_key = key
         self._attr_unique_id = f"{entry.entry_id}_{key}"
         self._attr_icon = "mdi:package-variant-closed" if key == "orders" else "mdi:truck-delivery"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=f"Amazon ({entry.data[CONF_EMAIL]})",
-            manufacturer="Amazon",
-            model=entry.data[CONF_DOMAIN],
-            entry_type=DeviceEntryType.SERVICE,
-            configuration_url=coordinator.client.base_url + "/your-orders/orders",
-        )
+        self._attr_device_info = device_info(coordinator)
 
     def _orders(self) -> list[dict[str, Any]]:
         data = self.coordinator.data

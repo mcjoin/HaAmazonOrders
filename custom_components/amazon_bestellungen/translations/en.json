@@ -54,8 +54,17 @@
   },
   "entity": {
     "sensor": {
-      "orders": { "name": "Orders" },
-      "in_transit": { "name": "In transit" }
+      "orders": {
+        "name": "Orders"
+      },
+      "in_transit": {
+        "name": "In transit"
+      }
+    },
+    "todo": {
+      "orders": {
+        "name": "Orders"
+      }
     }
   }
 }
