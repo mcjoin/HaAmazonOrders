@@ -1,0 +1,61 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Amazon-Konto verbinden",
+        "description": "Melde dich mit deinem Amazon-Konto an. Ist die Zwei-Schritt-Verifizierung aktiv, kannst du optional den Authenticator-Schlüssel (TOTP-Secret) angeben – sonst wirst du nach dem Code gefragt.",
+        "data": {
+          "amazon_domain": "Amazon-Seite",
+          "email": "E-Mail-Adresse",
+          "password": "Passwort",
+          "otp_secret": "2FA-Schlüssel (optional)"
+        }
+      },
+      "otp": {
+        "title": "Bestätigungscode",
+        "description": "Amazon verlangt einen Bestätigungscode (SMS oder Authenticator-App).",
+        "data": {
+          "otp_code": "Code"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Erneut anmelden",
+        "description": "Die Anmeldung für {email} ist abgelaufen. Bitte gib dein Passwort erneut ein.",
+        "data": {
+          "password": "Passwort",
+          "otp_secret": "2FA-Schlüssel (optional)"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "E-Mail oder Passwort falsch.",
+      "invalid_otp": "Der Code wurde nicht akzeptiert.",
+      "captcha": "Amazon verlangt ein Captcha. Melde dich einmal im Browser an und versuche es später erneut.",
+      "approval": "Amazon möchte die Anmeldung per App/E-Mail bestätigt haben. Bestätige sie und versuche es erneut.",
+      "cannot_connect": "Amazon ist nicht erreichbar.",
+      "unknown": "Unerwarteter Fehler, siehe Log."
+    },
+    "abort": {
+      "already_configured": "Dieses Konto ist bereits eingerichtet.",
+      "reauth_successful": "Erneute Anmeldung erfolgreich."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Einstellungen",
+        "data": {
+          "retention_days": "Zugestellte Bestellungen anzeigen für (Tage)",
+          "scan_interval": "Abfrageintervall (Minuten)",
+          "max_pages": "Max. Seiten der Bestellübersicht"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "orders": { "name": "Bestellungen" },
+      "in_transit": { "name": "Unterwegs" }
+    }
+  }
+}

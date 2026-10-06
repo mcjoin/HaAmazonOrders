@@ -1,0 +1,61 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect Amazon account",
+        "description": "Sign in with your Amazon account. If two-step verification is enabled you can optionally enter the authenticator key (TOTP secret) – otherwise you will be asked for the code.",
+        "data": {
+          "amazon_domain": "Amazon site",
+          "email": "E-mail address",
+          "password": "Password",
+          "otp_secret": "2FA key (optional)"
+        }
+      },
+      "otp": {
+        "title": "Verification code",
+        "description": "Amazon requires a verification code (SMS or authenticator app).",
+        "data": {
+          "otp_code": "Code"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Sign in again",
+        "description": "The login for {email} expired. Please enter your password again.",
+        "data": {
+          "password": "Password",
+          "otp_secret": "2FA key (optional)"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Wrong e-mail or password.",
+      "invalid_otp": "The code was not accepted.",
+      "captcha": "Amazon requires a captcha. Sign in once in a browser and try again later.",
+      "approval": "Amazon wants you to approve the sign-in via app/e-mail. Approve it and try again.",
+      "cannot_connect": "Amazon cannot be reached.",
+      "unknown": "Unexpected error, see log."
+    },
+    "abort": {
+      "already_configured": "This account is already configured.",
+      "reauth_successful": "Re-authentication successful."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Settings",
+        "data": {
+          "retention_days": "Keep delivered orders for (days)",
+          "scan_interval": "Polling interval (minutes)",
+          "max_pages": "Max. order history pages"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "orders": { "name": "Orders" },
+      "in_transit": { "name": "In transit" }
+    }
+  }
+}

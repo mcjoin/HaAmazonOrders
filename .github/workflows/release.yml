@@ -1,0 +1,30 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set version in manifest.json from tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          jq --arg v "$VERSION" '.version = $v' custom_components/amazon_bestellungen/manifest.json > manifest.tmp
+          mv manifest.tmp custom_components/amazon_bestellungen/manifest.json
+
+      - name: Build zip
+        run: |
+          cd custom_components/amazon_bestellungen
+          zip -r ../../amazon_bestellungen.zip .
+
+      - name: Upload zip to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$GITHUB_REF_NAME" amazon_bestellungen.zip --clobber
